@@ -1,0 +1,63 @@
+services:
+  mon:
+    image: quay.io/ceph/ceph:v18.2.7
+    container_name: ceph-mon
+    command: mon
+    environment:
+      MON_IP: 127.0.0.1
+      CEPH_PUBLIC_NETWORK: 0.0.0.0/0
+    volumes:
+      - ./ceph_conf:/etc/ceph
+      - ./ceph_lib:/var/lib/ceph
+    ports:
+      - "6789:6789"
+    networks:
+      - ceph-net
+
+  mgr:
+    image: quay.io/ceph/ceph:v18.2.7
+    container_name: ceph-mgr
+    command: mgr
+    depends_on:
+      - mon
+    volumes:
+      - ./ceph_conf:/etc/ceph
+      - ./ceph_lib:/var/lib/ceph
+    ports:
+      - "7000:7000"
+    networks:
+      - ceph-net
+
+  osd:
+    image: quay.io/ceph/ceph:v18.2.7
+    container_name: ceph-osd
+    command: osd
+    environment:
+      OSD_TYPE: directory
+      OSD_DIRECTORY: /var/lib/ceph/osd/osd-directory
+    depends_on:
+      - mon
+    volumes:
+      - ./ceph_conf:/etc/ceph
+      - ./ceph_lib:/var/lib/ceph
+      - ${CEPH_OSD_PATH}:/var/lib/ceph/osd/osd-directory
+    networks:
+      - ceph-net
+
+  rgw:
+    image: quay.io/ceph/ceph:v18.2.7
+    container_name: ceph-rgw
+    command: rgw
+    depends_on:
+      - mon
+    volumes:
+      - ./ceph_conf:/etc/ceph
+      - ./ceph_lib:/var/lib/ceph
+    ports:
+      - "8080:8080"
+    networks:
+      - ceph-net
+
+networks:
+  ceph-net:
+    driver: bridge

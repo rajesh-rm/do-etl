@@ -1,0 +1,39 @@
+services:
+  superset:
+    image: apache/superset:5.0.0
+    environment:
+      - SUPERSET_CONFIG_PATH=/app/superset_home/assets/superset_config.py
+      - SUPERSET_ENV=production
+      - SUPERSET_LOAD_EXAMPLES=no
+      - SUPERSET_SECRET_KEY=your-secret-key
+    ports:
+      - "8088:8088"
+    depends_on:
+      - db
+      - redis
+    restart: always
+    command: >
+      /bin/bash -c "
+        superset db upgrade &&
+        superset fab create-admin --username admin --firstname Superset --lastname Admin --email admin@superset.com --password admin &&
+        superset init &&
+        superset run -h 0.0.0.0 -p 8088"
+    volumes:
+      - ./superset_assets/my_logo.png:/app/superset/static/assets/my_logo.png
+      - ./superset_assets/superset_config.py:/app/superset_home/assets/superset_config.py
+
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=superset
+      - POSTGRES_USER=superset
+      - POSTGRES_PASSWORD=superset
+    volumes:
+      - db_home:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    restart: always
+
+volumes:
+  db_home:

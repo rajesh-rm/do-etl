@@ -1,0 +1,12 @@
+FROM quay.io/ceph/ceph:v18.2.7
+
+USER root
+RUN yum update -y && \
+    yum install -y iproute chrony && \
+    yum clean all
+
+COPY ceph-entrypoint.sh /ceph-entrypoint.sh
+RUN chmod +x /ceph-entrypoint.sh
+
+ENTRYPOINT ["/ceph-entrypoint.sh"]
+CMD ["sleep", "infinity"]
